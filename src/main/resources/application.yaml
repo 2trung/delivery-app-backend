@@ -1,0 +1,25 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+spring:
+  datasource:
+    url: "jdbc:postgresql://aws.postgres.database.azure.com:5432/delivery"
+    username: "postgres"
+    password: "ldVtNX5S6kdH2OQ"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+security:
+  jwt:
+    accessKey: "d27f99a8cf484733d688b374fa3d44e33798786c78c4b3647c751e67cf5f6e6f"
+    refreshKey: "571e5c3dc57c01aac42f1ee7b81c585d652c70ac27cf419b1b7aca91729484a7"
+    accessDuration: 1
+    refreshDuration: 30
+
+twilio:
+
+
+  phoneNumber: "+17177224953"
