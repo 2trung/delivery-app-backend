@@ -1,4 +1,4 @@
-package com.delivery.delivery_app.dto.path_finder;
+package com.delivery.delivery_app.dto.route;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -13,4 +13,6 @@ import java.util.List;
 public class RouteFinderResponse {
     List<NodeResponse> path;
 }
+
+
 

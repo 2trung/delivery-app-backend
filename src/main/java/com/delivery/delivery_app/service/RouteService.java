@@ -1,7 +1,8 @@
 package com.delivery.delivery_app.service;
 
-import com.delivery.delivery_app.dto.path_finder.NodeResponse;
-import com.delivery.delivery_app.dto.path_finder.RouteFinderResponse;
+import com.delivery.delivery_app.dto.route.NodeResponse;
+import com.delivery.delivery_app.dto.route.RouteFinderRequest;
+import com.delivery.delivery_app.dto.route.RouteFinderResponse;
 import com.delivery.delivery_app.mapper.NodeMapper;
 import com.delivery.delivery_app.utils.Edge;
 import com.delivery.delivery_app.utils.Node;
@@ -62,20 +63,48 @@ public class RouteService {
         }
     }
 
-    public RouteFinderResponse findRoute(String source, String destination) {
-        String[] sourceData = source.split(",");
-        String[] destinationData = destination.split(",");
-        double startLat = Double.parseDouble(sourceData[0]);
-        double startLang = Double.parseDouble(sourceData[1]);
-        double destinationLat = Double.parseDouble(destinationData[0]);
-        double destinationLang = Double.parseDouble(destinationData[1]);
-        Node start = getNearestNode(startLat, startLang);
-        Node goal = getNearestNode(destinationLat, destinationLang);
+//    public RouteFinderResponse findRoute(String origin, String destination) {
+//        String[] originData = origin.split(",");
+//        String[] destinationData = destination.split(",");
+//        double startLat = Double.parseDouble(originData[0]);
+//        double startLang = Double.parseDouble(originData[1]);
+//        double destinationLat = Double.parseDouble(destinationData[0]);
+//        double destinationLang = Double.parseDouble(destinationData[1]);
+//        Node start = getNearestNode(startLat, startLang);
+//        Node goal = getNearestNode(destinationLat, destinationLang);
+//        if (start == null || goal == null) return new RouteFinderResponse(Collections.emptyList());
+//        List<NodeResponse> result = aStar(start.getId(), goal.getId());
+//        result.addFirst(new NodeResponse(startLat, startLang));
+//        result.add(new NodeResponse(destinationLat, destinationLang));
+//        return new RouteFinderResponse(result);
+//    }
+
+    public RouteFinderResponse findRoute(RouteFinderRequest request) {
+        Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
+        Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
         if (start == null || goal == null) return new RouteFinderResponse(Collections.emptyList());
-        List<NodeResponse> result = aStar(start.getId(), goal.getId());
-        result.addFirst(new NodeResponse(startLat, startLang));
-        result.add(new NodeResponse(destinationLat, destinationLang));
-        return new RouteFinderResponse(result);
+        if (request.getStops() == null || request.getStops().length == 0) {
+            List<NodeResponse> result = aStar(start.getId(), goal.getId());
+            result.addFirst(request.getOrigin());
+            result.add(request.getDestination());
+            return new RouteFinderResponse(result);
+        } else {
+            List<NodeResponse> result = new LinkedList<>();
+            result.add(request.getOrigin());
+            for (NodeResponse stop : request.getStops()) {
+                Node stopNode = getNearestNode(stop.getLatitude(), stop.getLongitude());
+                if (stopNode == null) return new RouteFinderResponse(Collections.emptyList());
+                List<NodeResponse> path = aStar(start.getId(), stopNode.getId());
+                result.addAll(path);
+                result.add(stop);
+                start = stopNode;
+            }
+            List<NodeResponse> path = aStar(start.getId(), goal.getId());
+            result.addAll(path);
+            result.add(request.getDestination());
+            return new RouteFinderResponse(result);
+        }
+
     }
 
     private List<NodeResponse> aStar(int startId, int goalId) {

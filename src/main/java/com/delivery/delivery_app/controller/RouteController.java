@@ -1,16 +1,16 @@
 package com.delivery.delivery_app.controller;
 
 import com.delivery.delivery_app.dto.ApiResponse;
-import com.delivery.delivery_app.dto.path_finder.RouteFinderResponse;
+import com.delivery.delivery_app.dto.route.RouteFinderRequest;
+import com.delivery.delivery_app.dto.route.RouteFinderResponse;
 import com.delivery.delivery_app.service.RouteService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/route")
@@ -20,10 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class RouteController {
     RouteService routeService;
 
-    @GetMapping()
-    ApiResponse<RouteFinderResponse> getPath(@Param("source") String source, @Param("destination") String destination) {
-        var result = routeService.findRoute(source, destination);
-        log.info(source, destination);
+    @PostMapping()
+    ApiResponse<RouteFinderResponse> getPath(@RequestBody @Valid RouteFinderRequest request) {
+        var result = routeService.findRoute(request);
         return ApiResponse.<RouteFinderResponse>builder().data(result).build();
     }
 }
