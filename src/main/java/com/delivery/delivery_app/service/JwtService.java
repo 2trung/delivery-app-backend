@@ -61,7 +61,7 @@ public class JwtService {
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + accessDuration * 1000 * 60 * 60))
+                .expiration(new Date(System.currentTimeMillis() + accessDuration * 1000 * 60 * 60 * 24))
                 .signWith(getKey(ACCESS_TOKEN))
                 .compact();
     }
@@ -71,7 +71,7 @@ public class JwtService {
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + refreshDuration * 1000 * 60 * 60))
+                .expiration(new Date(System.currentTimeMillis() + refreshDuration * 1000 * 60 * 60 * 24))
                 .signWith(getKey(REFRESH_TOKEN))
                 .compact();
     }
