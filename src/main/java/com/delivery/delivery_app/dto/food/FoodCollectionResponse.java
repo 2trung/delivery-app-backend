@@ -13,23 +13,5 @@ public class FoodCollectionResponse {
 
     String name;
 
-    String address;
-
-    String displayAddress;
-
     String image;
-
-    Double latitude;
-
-    Double longitude;
-
-    String phoneNumber;
-
-    String merchantCategoryName;
-
-    Integer reviewCount;
-
-    Float rating;
-
-    Float deliveryRadius;
 }

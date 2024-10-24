@@ -20,11 +20,6 @@ public class FoodCategory {
 
     String name;
 
-    @ManyToOne
-    @JoinColumn(name = "restaurant_id")
+    @ManyToOne()
     Restaurant restaurant;
-
-    @OneToMany(mappedBy = "foodCategory", fetch = FetchType.LAZY)
-    List<Food> foods;
-
 }

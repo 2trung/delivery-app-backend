@@ -30,11 +30,6 @@ public class Food {
 
     Integer likeCount;
 
-    @ManyToOne
-    @JoinColumn(name = "food_category_id")
+    @ManyToOne()
     FoodCategory foodCategory;
-
-    @OneToMany(mappedBy = "food", fetch = FetchType.LAZY)
-    List<FoodCustomize> foodCustomizes;
-
 }

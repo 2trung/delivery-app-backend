@@ -2,7 +2,7 @@ package com.delivery.delivery_app.service;
 
 import com.delivery.delivery_app.dto.route.NodeResponse;
 import com.delivery.delivery_app.dto.route.RouteFinderRequest;
-import com.delivery.delivery_app.dto.route.RouteFinderResponse;
+import com.delivery.delivery_app.dto.route.RouteResponse;
 import com.delivery.delivery_app.mapper.NodeMapper;
 import com.delivery.delivery_app.utils.Edge;
 import com.delivery.delivery_app.utils.Node;
@@ -79,38 +79,43 @@ public class RouteService {
 //        return new RouteFinderResponse(result);
 //    }
 
-    public RouteFinderResponse findRoute(RouteFinderRequest request) {
+    public RouteResponse findRoute(RouteFinderRequest request) {
         Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
         Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
-        if (start == null || goal == null) return new RouteFinderResponse(Collections.emptyList());
+        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
+
+        double totalDistance = 0.0;
+        List<NodeResponse> result = new LinkedList<>();
+        result.add(request.getOrigin());
+
         if (request.getStops() == null || request.getStops().length == 0) {
-            List<NodeResponse> result = aStar(start.getId(), goal.getId());
-            result.addFirst(request.getOrigin());
+            var routeResponse = aStar(start.getId(), goal.getId());
+            totalDistance += routeResponse.getDistance();
+            result.addAll(routeResponse.getPath());
             result.add(request.getDestination());
-            return new RouteFinderResponse(result);
         } else {
-            List<NodeResponse> result = new LinkedList<>();
-            result.add(request.getOrigin());
             for (NodeResponse stop : request.getStops()) {
                 Node stopNode = getNearestNode(stop.getLatitude(), stop.getLongitude());
-                if (stopNode == null) return new RouteFinderResponse(Collections.emptyList());
-                List<NodeResponse> path = aStar(start.getId(), stopNode.getId());
-                result.addAll(path);
+                if (stopNode == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
+                var routeResponse = aStar(start.getId(), stopNode.getId());
+                totalDistance += routeResponse.getDistance();
+                result.addAll(routeResponse.getPath());
                 result.add(stop);
                 start = stopNode;
             }
-            List<NodeResponse> path = aStar(start.getId(), goal.getId());
-            result.addAll(path);
+            var routeResponse = aStar(start.getId(), goal.getId());
+            totalDistance += routeResponse.getDistance();
+            result.addAll(routeResponse.getPath());
             result.add(request.getDestination());
-            return new RouteFinderResponse(result);
         }
-
+        
+        return new RouteResponse(result, totalDistance, estimateTime(totalDistance));
     }
 
-    private List<NodeResponse> aStar(int startId, int goalId) {
+    private RouteResponse aStar(int startId, int goalId) {
         Node start = nodes.get(startId);
         Node goal = nodes.get(goalId);
-        if (start == null || goal == null) return Collections.emptyList();
+        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
 
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(Node::getfScore));
         Set<Node> closedSet = new HashSet<>();
@@ -128,7 +133,9 @@ public class RouteService {
             Node current = openSet.poll();
 
             if (current.equals(goal)) {
-                return reconstructPath(cameFrom, current);
+                List<NodeResponse> path = reconstructPath(cameFrom, current);
+                double distance = gScore.get(current);
+                return new RouteResponse(path, distance, "");
             }
 
             closedSet.add(current);
@@ -151,7 +158,7 @@ public class RouteService {
                 }
             }
         }
-        return Collections.emptyList();
+        return new RouteResponse(Collections.emptyList(), 0.0, "");
     }
 
     private List<NodeResponse> reconstructPath(Map<Node, Node> cameFrom, Node current) {
@@ -197,6 +204,17 @@ public class RouteService {
             }
         }
         return nearestNode;
+    }
+
+    private String estimateTime(double distance) {
+        double slowSpeed = 30.0;
+        double fastSpeed = 40.0;
+        double slowTime = distance / slowSpeed;
+        double fastTime = distance / fastSpeed;
+        Integer slowTimeInMinutes = (int) (slowTime * 60);
+        Integer fastTimeInMinutes = (int) (fastTime * 60);
+        Integer random = new Random().nextInt(5);
+        return (fastTimeInMinutes + random) + " - " + (slowTimeInMinutes + random)+ " phút";
     }
 
 }

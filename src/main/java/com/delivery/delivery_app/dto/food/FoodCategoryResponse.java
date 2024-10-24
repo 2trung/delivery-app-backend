@@ -15,5 +15,5 @@ public class FoodCategoryResponse {
 
     String name;
 
-    List<FoodResponse> foods;
+    List<FoodDetailResponse> foods;
 }

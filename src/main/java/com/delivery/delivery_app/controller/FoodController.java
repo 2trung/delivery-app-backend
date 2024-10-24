@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/food")
 @RequiredArgsConstructor
@@ -19,14 +21,34 @@ import org.springframework.web.bind.annotation.*;
 public class FoodController {
     private final FoodService foodService;
 
+    @GetMapping("/collections")
+    ApiResponse<List<FoodCollectionResponse>> getFoodCollections() {
+        return ApiResponse.<List<FoodCollectionResponse>>builder().data(foodService.getFoodCollections()).build();
+    }
+
+    @GetMapping("/restaurants/nearby")
+    ApiResponse<Page<RestaurantResponse>> getNearByRestaurant(@RequestParam Double latitude, @RequestParam Double longitude, @PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.<Page<RestaurantResponse>>builder().data(foodService.getNearByRestaurant(latitude, longitude, pageable)).build();
+    }
+
     @GetMapping("/collection")
-    ApiResponse<Page<FoodCollectionResponse>> getFoodCollection(@RequestParam String id, @PageableDefault(size = 10) Pageable pageable) {
-        return ApiResponse.<Page<FoodCollectionResponse>>builder().data(foodService.getFoodCollection(id, pageable)).build();
+    ApiResponse<Page<RestaurantResponse>> getFoodCollection(@RequestParam String id, @PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.<Page<RestaurantResponse>>builder().data(foodService.getRestaurantByFoodCollection(id, pageable)).build();
     }
 
     @GetMapping("/restaurant")
     ApiResponse<RestaurantDetailResponse> getRestaurantDetail(@RequestParam String id) {
         return ApiResponse.<RestaurantDetailResponse>builder().data(foodService.getRestaurantDetail(id)).build();
+    }
+
+    @GetMapping("/flash-sale")
+    ApiResponse<Page<FoodResponse>> getFlashSaleFoods(@PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.<Page<FoodResponse>>builder().data(foodService.getFlashSaleFoods(pageable)).build();
+    }
+
+    @GetMapping("/restaurant/discovers")
+    ApiResponse<Page<RestaurantResponse>> getDiscoverRestaurants(@RequestParam Double latitude, @RequestParam Double longitude,@PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.<Page<RestaurantResponse>>builder().data(foodService.getAllRestaurants(latitude, longitude, pageable)).build();
     }
 
     @PostMapping("/create-restaurant")

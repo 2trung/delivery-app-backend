@@ -17,4 +17,10 @@ public class MerchantCategory {
     String id;
 
     String name;
+
+    @ManyToOne()
+    FoodCollection foodCollection;
+
+    @ManyToOne()
+    Restaurant restaurant;
 }

@@ -10,8 +10,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RouteFinderResponse {
+public class RouteResponse {
     List<NodeResponse> path;
+    Double distance;
+    String duration;
 }
 
 

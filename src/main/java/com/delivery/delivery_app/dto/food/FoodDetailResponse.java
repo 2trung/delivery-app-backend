@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FoodResponse {
+public class FoodDetailResponse {
     String id;
 
     String name;
@@ -26,13 +26,5 @@ public class FoodResponse {
 
     Integer likeCount;
 
-    String restaurantId;
-
-    String restaurantName;
-
-    String restaurantAddress;
-
-    Double restaurantLatitude;
-
-    Double restaurantLongitude;
+    List<FoodCustomizeResponse> customizes;
 }

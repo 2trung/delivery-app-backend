@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class FoodCustomizeOption {
+public class FoodCollection {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false)
@@ -18,10 +20,6 @@ public class FoodCustomizeOption {
 
     String name;
 
-    Integer price;
+    String image;
 
-    Boolean isDefault;
-
-    @ManyToOne()
-    FoodCustomize foodCustomize;
 }

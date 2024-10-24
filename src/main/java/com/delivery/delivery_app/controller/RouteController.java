@@ -2,7 +2,7 @@ package com.delivery.delivery_app.controller;
 
 import com.delivery.delivery_app.dto.ApiResponse;
 import com.delivery.delivery_app.dto.route.RouteFinderRequest;
-import com.delivery.delivery_app.dto.route.RouteFinderResponse;
+import com.delivery.delivery_app.dto.route.RouteResponse;
 import com.delivery.delivery_app.service.RouteService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -20,8 +20,8 @@ public class RouteController {
     RouteService routeService;
 
     @PostMapping()
-    ApiResponse<RouteFinderResponse> getPath(@RequestBody @Valid RouteFinderRequest request) {
+    ApiResponse<RouteResponse> getPath(@RequestBody @Valid RouteFinderRequest request) {
         var result = routeService.findRoute(request);
-        return ApiResponse.<RouteFinderResponse>builder().data(result).build();
+        return ApiResponse.<RouteResponse>builder().data(result).build();
     }
 }

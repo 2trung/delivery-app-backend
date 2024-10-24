@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FoodCustomizeResponse {
+
     String id;
 
     String name;
@@ -19,5 +20,5 @@ public class FoodCustomizeResponse {
 
     Integer maximumChoices;
 
-    List<FoodCustomizeOptionResponse> foodCustomizeOptions;
+    List<FoodCustomizeOptionResponse> options;
 }

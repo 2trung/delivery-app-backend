@@ -4,6 +4,7 @@ import com.delivery.delivery_app.dto.food.*;
 import com.delivery.delivery_app.entity.*;
 import com.delivery.delivery_app.mapper.FoodMapper;
 import com.delivery.delivery_app.repository.*;
+import com.delivery.delivery_app.utils.CustomPageable;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +27,56 @@ public class FoodService {
     FoodCustomizeOptionRepository foodCustomizeOptionRepository;
     FoodCategoryRepository foodCategoryRepository;
     FoodRepository foodRepository;
+    FoodCollectionRepository foodCollectionRepository;
 
-    public Page<FoodCollectionResponse> getFoodCollection(String id, Pageable pageable) {
-        Page<Restaurant> restaurants = restaurantRepository.findByMerchantCategoryId(id, pageable);
-        return foodMapper.toRestaurantResponsePage(restaurants, pageable);
+    public List<FoodCollectionResponse> getFoodCollections() {
+        return foodCollectionRepository.findAllFoodCollections();
     }
 
-    @Transactional
+    public Page<RestaurantResponse> getRestaurantByFoodCollection(String id, Pageable pageable) {
+        CustomPageable customPageable = new CustomPageable(pageable);
+        Page<Restaurant> restaurants = foodCollectionRepository.findAllByMerchantCategoryFoodCollectionId(id, customPageable);
+        return foodMapper.toRestaurantResponsePage(restaurants, customPageable);
+    }
+
+    public Page<RestaurantResponse> getNearByRestaurant(Double latitude, Double longitude, Pageable pageable) {
+        return getNearByRestaurant(latitude, longitude, 5.0, pageable);
+    }
+
+    public Page<RestaurantResponse> getNearByRestaurant(Double latitude, Double longitude, Double radius_km, Pageable pageable) {
+        CustomPageable customPageable = new CustomPageable(pageable);
+        Double latDelta = radius_km / 111.32;
+        Double lonDelta = radius_km / (111.32 * Math.cos(Math.toRadians(latitude)));
+        Double minLat = latitude - latDelta;
+        Double maxLat = latitude + latDelta;
+        Double minLon = longitude - lonDelta;
+        Double maxLon = longitude + lonDelta;
+        Page<RestaurantResponse> restaurants = restaurantRepository.findNearByRestaurant(minLat, maxLat, minLon, maxLon, customPageable);
+        for (RestaurantResponse response : restaurants) {
+            double distance = haversine(latitude, longitude, response.getLatitude(), response.getLongitude());
+            response.setDistance(distance);
+        }
+        return restaurants;
+    }
+
+    public Page<RestaurantResponse> getAllRestaurants(Double latitude, Double longitude,Pageable pageable) {
+        CustomPageable customPageable = new CustomPageable(pageable);
+        var restaurants = restaurantRepository.getAllBy(customPageable);
+        for (RestaurantResponse response : restaurants) {
+            double distance = haversine(latitude, longitude, response.getLatitude(), response.getLongitude());
+            response.setDistance(distance);
+        }
+        return restaurants;
+    }
+
     public RestaurantDetailResponse getRestaurantDetail(String id) {
-        var restaurant = restaurantRepository.findById(id).orElseThrow();
-        return foodMapper.toRestaurantDetailResponse(restaurant);
+        var objects = restaurantRepository.getRestaurantDetailsById(id);
+        return foodMapper.toRestaurantDetailResponse(objects);
+    }
+
+    public Page<FoodResponse> getFlashSaleFoods(Pageable pageable) {
+        CustomPageable customPageable = new CustomPageable(pageable);
+        return foodRepository.getFlashSaleFoods(customPageable);
     }
 
     public Restaurant createRestaurant(CreateRestaurantRequest request) {
@@ -79,4 +122,16 @@ public class FoodService {
                 .build();
         return foodRepository.save(food);
     }
+
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+        double a = Math.pow(Math.sin(dLat / 2), 2) + Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        return 6371 * c;
+    }
+
+    ;
 }

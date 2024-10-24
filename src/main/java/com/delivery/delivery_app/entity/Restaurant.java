@@ -38,9 +38,6 @@ public class Restaurant {
 
     Float deliveryRadius;
 
-    @ManyToOne
+    @ManyToOne()
     MerchantCategory merchantCategory;
-
-    @OneToMany(mappedBy = "restaurant", fetch = FetchType.LAZY)
-    List<FoodCategory> foodCategories;
 }

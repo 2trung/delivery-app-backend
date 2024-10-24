@@ -24,10 +24,6 @@ public class FoodCustomize {
 
     Integer maximumChoices;
 
-    @ManyToOne
-    @JoinColumn(name = "food_id")
+    @ManyToOne()
     Food food;
-
-    @OneToMany(mappedBy = "foodCustomize", fetch = FetchType.LAZY)
-    List<FoodCustomizeOption> foodCustomizeOptions;
 }
