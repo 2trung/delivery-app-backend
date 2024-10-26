@@ -20,7 +20,4 @@ public class MerchantCategory {
 
     @ManyToOne()
     FoodCollection foodCollection;
-
-    @ManyToOne()
-    Restaurant restaurant;
 }

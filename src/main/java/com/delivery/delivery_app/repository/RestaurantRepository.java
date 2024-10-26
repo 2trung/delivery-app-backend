@@ -4,6 +4,7 @@ import com.delivery.delivery_app.dto.food.RestaurantResponse;
 import com.delivery.delivery_app.entity.Restaurant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, String> 
     @Query("SELECT new com.delivery.delivery_app.dto.food.RestaurantResponse(r.id, r.name, r.address, r.displayAddress, r.image, r.latitude, r.longitude, r.phoneNumber, r.reviewCount, r.rating, r.deliveryRadius) FROM Restaurant r WHERE r.latitude >= :minLat AND r.latitude <= :maxLat AND r.longitude >= :minLon AND r.longitude <= :maxLon ORDER BY RANDOM()")
     Page<RestaurantResponse> findNearByRestaurant(Double minLat, Double maxLat, Double minLon, Double maxLon, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"merchantCategory"})
     @Query("SELECT r, fc, f, fcz, fco " +
             "FROM Restaurant r " +
             "JOIN FoodCategory fc ON fc.restaurant.id = r.id " +
