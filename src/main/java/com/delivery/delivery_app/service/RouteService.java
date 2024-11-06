@@ -1,11 +1,11 @@
 package com.delivery.delivery_app.service;
 
-import com.delivery.delivery_app.dto.route.NodeResponse;
+import com.delivery.delivery_app.dto.route.Node;
+import com.delivery.delivery_app.dto.route.Route;
 import com.delivery.delivery_app.dto.route.RouteFinderRequest;
 import com.delivery.delivery_app.dto.route.RouteResponse;
 import com.delivery.delivery_app.mapper.NodeMapper;
 import com.delivery.delivery_app.utils.Edge;
-import com.delivery.delivery_app.utils.Node;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import org.springframework.util.FileCopyUtils;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RouteService {
-    Map<Integer, Node> nodes;
+    Map<Integer, com.delivery.delivery_app.utils.Node> nodes;
     NodeMapper nodeMapper;
 
     @Autowired
@@ -80,49 +80,49 @@ public class RouteService {
 //    }
 
     public RouteResponse findRoute(RouteFinderRequest request) {
-        Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
-        Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
-        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
+        com.delivery.delivery_app.utils.Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
+        com.delivery.delivery_app.utils.Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
+        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "", 0);
 
         double totalDistance = 0.0;
-        List<NodeResponse> result = new LinkedList<>();
+        List<Node> result = new LinkedList<>();
         result.add(request.getOrigin());
 
         if (request.getStops() == null || request.getStops().length == 0) {
-            var routeResponse = aStar(start.getId(), goal.getId());
-            totalDistance += routeResponse.getDistance();
-            result.addAll(routeResponse.getPath());
+            var route = aStar(start.getId(), goal.getId());
+            totalDistance += route.getDistance();
+            result.addAll(route.getNodes());
             result.add(request.getDestination());
         } else {
-            for (NodeResponse stop : request.getStops()) {
-                Node stopNode = getNearestNode(stop.getLatitude(), stop.getLongitude());
-                if (stopNode == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
+            for (Node stop : request.getStops()) {
+                com.delivery.delivery_app.utils.Node stopNode = getNearestNode(stop.getLatitude(), stop.getLongitude());
+                if (stopNode == null) return new RouteResponse(Collections.emptyList(), 0.0, "", 0);
                 var routeResponse = aStar(start.getId(), stopNode.getId());
                 totalDistance += routeResponse.getDistance();
-                result.addAll(routeResponse.getPath());
+                result.addAll(routeResponse.getNodes());
                 result.add(stop);
                 start = stopNode;
             }
             var routeResponse = aStar(start.getId(), goal.getId());
             totalDistance += routeResponse.getDistance();
-            result.addAll(routeResponse.getPath());
+            result.addAll(routeResponse.getNodes());
             result.add(request.getDestination());
         }
         
-        return new RouteResponse(result, totalDistance, estimateTime(totalDistance));
+        return new RouteResponse(result, totalDistance, estimateTime(totalDistance), estimateCost(totalDistance));
     }
 
-    private RouteResponse aStar(int startId, int goalId) {
-        Node start = nodes.get(startId);
-        Node goal = nodes.get(goalId);
-        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "");
+    private Route aStar(int startId, int goalId) {
+        com.delivery.delivery_app.utils.Node start = nodes.get(startId);
+        com.delivery.delivery_app.utils.Node goal = nodes.get(goalId);
+        if (start == null || goal == null) return new Route(Collections.emptyList(), 0.0);
 
-        PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(Node::getfScore));
-        Set<Node> closedSet = new HashSet<>();
+        PriorityQueue<com.delivery.delivery_app.utils.Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(com.delivery.delivery_app.utils.Node::getfScore));
+        Set<com.delivery.delivery_app.utils.Node> closedSet = new HashSet<>();
 
-        Map<Node, Node> cameFrom = new HashMap<>();
-        Map<Node, Double> gScore = new HashMap<>();
-        Map<Node, Double> fScore = new HashMap<>();
+        Map<com.delivery.delivery_app.utils.Node, com.delivery.delivery_app.utils.Node> cameFrom = new HashMap<>();
+        Map<com.delivery.delivery_app.utils.Node, Double> gScore = new HashMap<>();
+        Map<com.delivery.delivery_app.utils.Node, Double> fScore = new HashMap<>();
 
         gScore.put(start, 0.0);
         fScore.put(start, heuristic(start, goal));
@@ -130,18 +130,18 @@ public class RouteService {
         openSet.add(start);
 
         while (!openSet.isEmpty()) {
-            Node current = openSet.poll();
+            com.delivery.delivery_app.utils.Node current = openSet.poll();
 
             if (current.equals(goal)) {
-                List<NodeResponse> path = reconstructPath(cameFrom, current);
+                List<Node> path = reconstructPath(cameFrom, current);
                 double distance = gScore.get(current);
-                return new RouteResponse(path, distance, "");
+                return new Route(path, distance);
             }
 
             closedSet.add(current);
 
             for (Edge edge : current.getEdges()) {
-                Node neighbor = edge.getTo();
+                com.delivery.delivery_app.utils.Node neighbor = edge.getTo();
                 if (closedSet.contains(neighbor)) continue;
 
                 double tentativeGScore = gScore.get(current) + edge.getCost();
@@ -158,11 +158,11 @@ public class RouteService {
                 }
             }
         }
-        return new RouteResponse(Collections.emptyList(), 0.0, "");
+        return new Route(Collections.emptyList(), 0.0);
     }
 
-    private List<NodeResponse> reconstructPath(Map<Node, Node> cameFrom, Node current) {
-        List<NodeResponse> path = new ArrayList<>();
+    private List<Node> reconstructPath(Map<com.delivery.delivery_app.utils.Node, com.delivery.delivery_app.utils.Node> cameFrom, com.delivery.delivery_app.utils.Node current) {
+        List<Node> path = new ArrayList<>();
         while (current != null) {
             path.add(nodeMapper.toNodeResponse(current));
             current = cameFrom.get(current);
@@ -172,18 +172,18 @@ public class RouteService {
     }
 
     private void addNode(int id, double lat, double lang) {
-        nodes.put(id, new Node(id, lat, lang));
+        nodes.put(id, new com.delivery.delivery_app.utils.Node(id, lat, lang));
     }
 
     private void addEdge(int fromId, int toId, double cost) {
-        Node from = nodes.get(fromId);
-        Node to = nodes.get(toId);
+        com.delivery.delivery_app.utils.Node from = nodes.get(fromId);
+        com.delivery.delivery_app.utils.Node to = nodes.get(toId);
         if (from != null && to != null) {
             from.addEdge(to, cost);
         }
     }
 
-    private double heuristic(Node a, Node b) {
+    private double heuristic(com.delivery.delivery_app.utils.Node a, com.delivery.delivery_app.utils.Node b) {
         double latDistance = Math.toRadians(b.getLatitude() - a.getLatitude());
         double lngDistance = Math.toRadians(b.getLongitude() - a.getLongitude());
         double haversine = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
@@ -193,11 +193,11 @@ public class RouteService {
         return 6371 * result;
     }
 
-    private Node getNearestNode(double lat, double lang) {
-        Node nearestNode = null;
+    private com.delivery.delivery_app.utils.Node getNearestNode(double lat, double lang) {
+        com.delivery.delivery_app.utils.Node nearestNode = null;
         double minDistance = Double.POSITIVE_INFINITY;
-        for (Node node : nodes.values()) {
-            double distance = heuristic(node, new Node(-1, lat, lang));
+        for (com.delivery.delivery_app.utils.Node node : nodes.values()) {
+            double distance = heuristic(node, new com.delivery.delivery_app.utils.Node(-1, lat, lang));
             if (distance < minDistance) {
                 minDistance = distance;
                 nearestNode = node;
@@ -216,5 +216,21 @@ public class RouteService {
         Integer random = new Random().nextInt(5);
         return (fastTimeInMinutes + random) + " - " + (slowTimeInMinutes + random)+ " phút";
     }
+
+    private Integer estimateCost(double distance) {
+        if (distance <= 0) {
+            return 0;
+        }
+        int firstKmPrice = 11000;
+        int additionalKmPrice = 3800;
+        int totalPrice;
+        if (distance <= 1) {
+            totalPrice = firstKmPrice;
+        } else {
+            totalPrice = firstKmPrice + (int) Math.ceil(distance - 1) * additionalKmPrice;
+        }
+        return totalPrice;
+    }
+
 
 }

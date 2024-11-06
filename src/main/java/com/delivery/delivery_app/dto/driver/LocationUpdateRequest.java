@@ -1,4 +1,4 @@
-package com.delivery.delivery_app.dto.route;
+package com.delivery.delivery_app.dto.driver;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,8 +8,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RouteFinderRequest {
-    Node origin;
-    Node destination;
-    Node[] stops;
+public class LocationUpdateRequest {
+    Double latitude;
+    Double longitude;
 }

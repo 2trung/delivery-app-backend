@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +66,7 @@ public class AuthenticationService {
         if (userRepository.findByPhoneNumber(formattedPhoneNumber).isPresent())
             throw new AppException(ErrorCode.USER_EXISTED);
 
-        if (!request.getEmail().isEmpty() && userRepository.findByEmail(request.getEmail()).isPresent())
+        if (request.getEmail() != null && !request.getEmail().isEmpty() && userRepository.findByEmail(request.getEmail()).isPresent())
             throw new AppException(ErrorCode.EMAIL_EXISTED);
 
         var otp = otpRepository.findByPhoneNumber(formattedPhoneNumber);
@@ -90,10 +91,34 @@ public class AuthenticationService {
             var formattedPhoneNumber = formatPhoneNumber(request.getPhoneNumber());
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(formattedPhoneNumber, request.getPassword()));
             var user = userRepository.findByPhoneNumber(formattedPhoneNumber).orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIAL));
-            TokenResponse response = new TokenResponse();
-            response.setAccessToken(jwtService.generateToken(user));
-            response.setRefreshToken(jwtService.generateRefreshToken(user));
-            return response;
+            Set<Role> roles = user.getRoles();
+            if (roles.stream().anyMatch(role -> role.getName().equals(PredefinedRole.USER_ROLE))) {
+                TokenResponse response = new TokenResponse();
+                response.setAccessToken(jwtService.generateToken(user));
+                response.setRefreshToken(jwtService.generateRefreshToken(user));
+                return response;
+            } else {
+                throw new AppException(ErrorCode.INVALID_CREDENTIAL);
+            }
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIAL);
+        }
+    }
+
+    public TokenResponse driverLogin(UserLoginRequest request) {
+        try {
+            var formattedPhoneNumber = formatPhoneNumber(request.getPhoneNumber());
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(formattedPhoneNumber, request.getPassword()));
+            var user = userRepository.findByPhoneNumber(formattedPhoneNumber).orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIAL));
+            Set<Role> roles = user.getRoles();
+            if (roles.stream().anyMatch(role -> role.getName().equals(PredefinedRole.DRIVER_ROLE))) {
+                TokenResponse response = new TokenResponse();
+                response.setAccessToken(jwtService.generateToken(user));
+                response.setRefreshToken(jwtService.generateRefreshToken(user));
+                return response;
+            } else {
+                throw new AppException(ErrorCode.INVALID_CREDENTIAL);
+            }
         } catch (Exception e) {
             throw new AppException(ErrorCode.INVALID_CREDENTIAL);
         }

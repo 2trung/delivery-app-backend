@@ -18,8 +18,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
-import com.delivery.delivery_app.service.UserService;
 import com.delivery.delivery_app.service.JwtService;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
@@ -36,7 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
-    private String[] WHITE_LIST = {"/auth"};
+    private String[] WHITE_LIST = {"/auth", "/ws"};
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String requestURI = request.getRequestURI();

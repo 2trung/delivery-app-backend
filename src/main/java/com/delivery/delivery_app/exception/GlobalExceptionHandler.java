@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
         log.error("Exception: ", exception);
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setMessage(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-
         return ResponseEntity.badRequest().body(apiResponse);
     }
 
