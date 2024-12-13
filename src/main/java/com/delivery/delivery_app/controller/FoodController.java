@@ -47,7 +47,7 @@ public class FoodController {
     }
 
     @GetMapping("/restaurant/discovers")
-    ApiResponse<Page<RestaurantResponse>> getDiscoverRestaurants(@RequestParam Double latitude, @RequestParam Double longitude,@PageableDefault(size = 10) Pageable pageable) {
+    ApiResponse<Page<RestaurantResponse>> getDiscoverRestaurants(@RequestParam Double latitude, @RequestParam Double longitude, @PageableDefault(size = 10) Pageable pageable) {
         return ApiResponse.<Page<RestaurantResponse>>builder().data(foodService.getAllRestaurants(latitude, longitude, pageable)).build();
     }
 
@@ -75,4 +75,14 @@ public class FoodController {
     ApiResponse<Food> createFood(@RequestBody CreateFoodRequest request) {
         return ApiResponse.<Food>builder().data(foodService.createFood(request)).build();
     }
+
+        @GetMapping("/search")
+    ApiResponse<Page<FoodResponse>> searchFoods(@RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
+        return ApiResponse.<Page<FoodResponse>>builder().data(foodService.searchFoods(keyword, pageable)).build();
+    }
+//    @GetMapping("/search")
+//    ApiResponse<String> searchFoods(@RequestParam String keyword, @PageableDefault(size = 10) Pageable pageable) {
+//        foodService.searchFood(keyword);
+//        return ApiResponse.<String>builder().data("ok").build();
+//    }
 }

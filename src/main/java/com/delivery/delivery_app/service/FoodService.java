@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -59,7 +59,7 @@ public class FoodService {
         return restaurants;
     }
 
-    public Page<RestaurantResponse> getAllRestaurants(Double latitude, Double longitude,Pageable pageable) {
+    public Page<RestaurantResponse> getAllRestaurants(Double latitude, Double longitude, Pageable pageable) {
         CustomPageable customPageable = new CustomPageable(pageable);
         var restaurants = restaurantRepository.getAllBy(customPageable);
         for (RestaurantResponse response : restaurants) {
@@ -89,38 +89,25 @@ public class FoodService {
 
     public FoodCustomize createFoodCustomize(CreateFoodCustomizeRequest request) {
         Food food = foodRepository.findById(request.getFoodId()).orElseThrow();
-        FoodCustomize foodCustomize = FoodCustomize.builder()
-                .name(request.getName())
-                .maximumChoices(request.getMaximumChoices())
-                .minimumChoices(request.getMinimumChoices())
-                .food(food)
-                .build();
+        FoodCustomize foodCustomize = FoodCustomize.builder().name(request.getName()).maximumChoices(request.getMaximumChoices()).minimumChoices(request.getMinimumChoices()).food(food).build();
         return foodCustomizeRepository.save(foodCustomize);
     }
 
     public FoodCustomizeOption createFoodCustomizeOption(CreateFoodCustomizeOptionRequest request) {
         FoodCustomize foodCustomize = foodCustomizeRepository.findById(request.getFoodCustomizeId()).orElseThrow();
-        FoodCustomizeOption foodCustomizeOption = FoodCustomizeOption.builder()
-                .name(request.getName())
-                .price(request.getPrice())
-                .isDefault(request.getIsDefault())
-                .foodCustomize(foodCustomize)
-                .build();
+        FoodCustomizeOption foodCustomizeOption = FoodCustomizeOption.builder().name(request.getName()).price(request.getPrice()).isDefault(request.getIsDefault()).foodCustomize(foodCustomize).build();
         return foodCustomizeOptionRepository.save(foodCustomizeOption);
     }
 
     public Food createFood(CreateFoodRequest request) {
         FoodCategory foodCategory = foodCategoryRepository.findById(request.getFoodCategoryId()).orElseThrow();
-        Food food = Food.builder()
-                .price(request.getPrice())
-                .oldPrice(request.getOld_price())
-                .image(request.getImage())
-                .name(request.getName())
-                .orderCount(request.getOrderCount())
-                .likeCount(request.getLikeCount())
-                .foodCategory(foodCategory)
-                .build();
+        Food food = Food.builder().price(request.getPrice()).oldPrice(request.getOld_price()).image(request.getImage()).name(request.getName()).orderCount(request.getOrderCount()).likeCount(request.getLikeCount()).foodCategory(foodCategory).build();
         return foodRepository.save(food);
+    }
+
+    public Page<FoodResponse> searchFoods(String keyword, Pageable pageable) {
+        var customPageable = new CustomPageable(pageable);
+        return foodRepository.searchByNameLikeIgnoreCase(keyword, customPageable);
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {

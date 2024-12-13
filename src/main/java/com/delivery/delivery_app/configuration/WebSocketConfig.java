@@ -57,7 +57,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     assert authorizationHeader != null;
                     String token = authorizationHeader.substring(7);
                     String phoneNumber = jwtService.extractUsername(token, ACCESS_TOKEN);
-                    log.info("Extracted phone number: {}", phoneNumber);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(phoneNumber);
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     accessor.setUser(auth);
@@ -66,5 +65,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             }
         });
     }
-
 }

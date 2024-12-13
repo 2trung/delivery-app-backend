@@ -1,6 +1,7 @@
 package com.delivery.delivery_app.constant;
 
 public enum OrderStatus {
+    WAITING_FOR_PAYMENT,       // Đang đợi thanh toán
     PENDING,                 // Đơn hàng đang chờ tài xế
     WAITING_FOR_ACCEPTANCE,   // Đã tìm thấy tài xế, đang chờ tài xế chấp nhận
     ARRIVING,                 // Tài xế đang đến gần

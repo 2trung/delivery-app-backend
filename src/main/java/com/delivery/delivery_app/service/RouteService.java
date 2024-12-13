@@ -1,5 +1,7 @@
 package com.delivery.delivery_app.service;
 
+import com.delivery.delivery_app.constant.OrderType;
+import com.delivery.delivery_app.constant.ProductSize;
 import com.delivery.delivery_app.dto.route.Node;
 import com.delivery.delivery_app.dto.route.Route;
 import com.delivery.delivery_app.dto.route.RouteFinderRequest;
@@ -88,7 +90,7 @@ public class RouteService {
         List<Node> result = new LinkedList<>();
         result.add(request.getOrigin());
 
-        if (request.getStops() == null || request.getStops().length == 0) {
+        if (request.getStops() == null || request.getStops().isEmpty()) {
             var route = aStar(start.getId(), goal.getId());
             totalDistance += route.getDistance();
             result.addAll(route.getNodes());
@@ -109,7 +111,7 @@ public class RouteService {
             result.add(request.getDestination());
         }
         
-        return new RouteResponse(result, totalDistance, estimateTime(totalDistance), estimateCost(totalDistance));
+        return new RouteResponse(result, totalDistance, estimateTime(totalDistance), estimateCost(request.getOrderType(), request.getProductSize(), totalDistance));
     }
 
     private Route aStar(int startId, int goalId) {
@@ -217,7 +219,33 @@ public class RouteService {
         return (fastTimeInMinutes + random) + " - " + (slowTimeInMinutes + random)+ " phút";
     }
 
-    private Integer estimateCost(double distance) {
+    public Integer estimateCost(OrderType orderType, ProductSize productSize, double distance) {
+        if (distance <= 0) {
+            return 0;
+        }
+
+        int totalPrice;
+
+        switch (orderType) {
+            case OrderType.RIDE:
+                totalPrice = calculateRideCost(distance);
+                break;
+
+            case OrderType.FOOD_DELIVERY:
+                totalPrice = calculateFoodDeliveryCost(distance);
+                break;
+
+            case OrderType.DELIVERY:
+                totalPrice = calculateDeliveryCost(productSize, distance);
+                break;
+
+            default:
+                throw new IllegalArgumentException("Invalid order type");
+        }
+
+        return totalPrice;
+    }
+    private int calculateRideCost(double distance) {
         if (distance <= 0) {
             return 0;
         }
@@ -230,6 +258,47 @@ public class RouteService {
             totalPrice = firstKmPrice + (int) Math.ceil(distance - 1) * additionalKmPrice;
         }
         return totalPrice;
+    }
+
+    private int calculateFoodDeliveryCost(double distance) {
+        int basePrice = 8000;
+        int perKmPrice = 2500;
+        if (distance <= 2) {
+            return basePrice;
+        } else {
+            return basePrice + (int) Math.ceil(distance - 2) * perKmPrice;
+        }
+    }
+
+    private int calculateDeliveryCost(ProductSize productSize, double distance) {
+        int basePrice;
+        int perKmPrice;
+
+        switch (productSize) {
+            case ProductSize.SMALL:
+                basePrice = 10000;
+                perKmPrice = 3000;
+                break;
+
+            case ProductSize.MEDIUM:
+                basePrice = 15000;
+                perKmPrice = 4000;
+                break;
+
+            case ProductSize.LARGE:
+                basePrice = 25000;
+                perKmPrice = 5000;
+                break;
+            default:
+                basePrice = 10000;
+                perKmPrice = 3000;
+        }
+
+        if (distance <= 2) {
+            return basePrice;
+        } else {
+            return basePrice + (int) Math.ceil(distance - 2) * perKmPrice;
+        }
     }
 
 

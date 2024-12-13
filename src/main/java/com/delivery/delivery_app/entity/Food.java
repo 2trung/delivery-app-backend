@@ -1,5 +1,6 @@
 package com.delivery.delivery_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -32,4 +33,8 @@ public class Food {
 
     @ManyToOne()
     FoodCategory foodCategory;
+
+    @OneToMany()
+    @JsonManagedReference
+    List<FoodCustomize> foodCustomizes;
 }

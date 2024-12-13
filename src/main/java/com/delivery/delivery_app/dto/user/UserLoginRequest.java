@@ -1,4 +1,4 @@
-package com.delivery.delivery_app.dto.auth;
+package com.delivery.delivery_app.dto.user;
 
 import com.delivery.delivery_app.validator.ValidPhoneNumber;
 import lombok.*;

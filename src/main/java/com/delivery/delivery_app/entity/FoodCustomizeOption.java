@@ -1,5 +1,6 @@
 package com.delivery.delivery_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -23,5 +24,6 @@ public class FoodCustomizeOption {
     Boolean isDefault;
 
     @ManyToOne()
+    @JsonManagedReference
     FoodCustomize foodCustomize;
 }

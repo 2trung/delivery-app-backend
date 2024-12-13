@@ -1,9 +1,8 @@
-package com.delivery.delivery_app.dto.auth;
+package com.delivery.delivery_app.dto.user;
 
 import com.delivery.delivery_app.validator.ValidPhoneNumber;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.Length;
 
 @Data
 @NoArgsConstructor

@@ -1,8 +1,11 @@
 package com.delivery.delivery_app.dto.order;
 
 import com.delivery.delivery_app.constant.PaymentMethod;
+import com.delivery.delivery_app.entity.OrderLocation;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,15 +19,7 @@ public class CreateRideOrderRequest {
 
     PaymentMethod paymentMethod;
 
-    String originAddress;
+    String cardId;
 
-    Double originLatitude;
-
-    Double originLongitude;
-
-    String destinationAddress;
-
-    Double destinationLatitude;
-
-    Double destinationLongitude;
+    List<CreateOrderLocationRequest> locations;
 }

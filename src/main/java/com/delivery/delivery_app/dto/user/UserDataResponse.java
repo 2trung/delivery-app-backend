@@ -1,5 +1,6 @@
-package com.delivery.delivery_app.dto.auth;
+package com.delivery.delivery_app.dto.user;
 
+import com.delivery.delivery_app.entity.Driver;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
@@ -15,4 +16,5 @@ public class UserDataResponse {
     String phoneNumber;
     String email;
     LocalDate dob;
+    String avatar;
 }

@@ -103,12 +103,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(401).body(apiResponse);
     }
 
-    @ExceptionHandler(value = HttpMessageNotReadableException.class)
-    ResponseEntity<ApiResponse> handlingHttpMessageNotReadableException(HttpMessageNotReadableException exception) {
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setMessage(ErrorCode.INVALID_DATA.getMessage());
-        return ResponseEntity.status(401).body(apiResponse);
-    }
+//    @ExceptionHandler(value = HttpMessageNotReadableException.class)
+//    ResponseEntity<ApiResponse> handlingHttpMessageNotReadableException(HttpMessageNotReadableException exception) {
+//        ApiResponse apiResponse = new ApiResponse();
+//        apiResponse.setMessage(ErrorCode.INVALID_DATA.getMessage());
+//        return ResponseEntity.badRequest().body(apiResponse);
+//    }
 
     @ExceptionHandler(value = MalformedJwtException.class)
     ResponseEntity<ApiResponse> handlingMalformedJwtException(MalformedJwtException exception) {
@@ -116,5 +116,12 @@ public class GlobalExceptionHandler {
         apiResponse.setMessage(ErrorCode.INVALID_TOKEN.getMessage());
 
         return ResponseEntity.status(401).body(apiResponse);
+    }
+
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    ResponseEntity<ApiResponse> handlingIllegalArgumentException(IllegalArgumentException exception) {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setMessage(exception.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
     }
 }

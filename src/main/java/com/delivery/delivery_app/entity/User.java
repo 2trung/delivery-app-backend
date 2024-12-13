@@ -1,5 +1,7 @@
 package com.delivery.delivery_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +34,9 @@ public class User implements UserDetails {
     String password;
     String email;
     LocalDate dob;
+    String paymentId;
+    @Column(columnDefinition = "TEXT")
+    String avatar;
 
     @CreationTimestamp
     private Instant createdAt;
@@ -39,6 +44,7 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private Instant updatedAt;
 
+    @JsonIgnore
     @ManyToMany
     Set<Role> roles;
 

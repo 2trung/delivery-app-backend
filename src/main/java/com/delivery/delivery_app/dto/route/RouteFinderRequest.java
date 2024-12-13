@@ -1,7 +1,11 @@
 package com.delivery.delivery_app.dto.route;
 
+import com.delivery.delivery_app.constant.OrderType;
+import com.delivery.delivery_app.constant.ProductSize;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -9,7 +13,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RouteFinderRequest {
+    OrderType orderType;
+    ProductSize productSize;
     Node origin;
     Node destination;
-    Node[] stops;
+    List<Node> stops;
 }

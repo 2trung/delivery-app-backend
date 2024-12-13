@@ -1,6 +1,8 @@
 package com.delivery.delivery_app.entity;
 
 import com.delivery.delivery_app.constant.DriverStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,9 +20,9 @@ public class Driver {
     String Id;
 
     @MapsId
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     User user;
-
 
     String licensePlate;
 

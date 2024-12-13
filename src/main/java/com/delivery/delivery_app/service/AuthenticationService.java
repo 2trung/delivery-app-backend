@@ -2,6 +2,9 @@ package com.delivery.delivery_app.service;
 
 import com.delivery.delivery_app.constant.PredefinedRole;
 import com.delivery.delivery_app.dto.auth.*;
+import com.delivery.delivery_app.dto.user.UserDataResponse;
+import com.delivery.delivery_app.dto.user.UserLoginRequest;
+import com.delivery.delivery_app.dto.user.UserRegisterRequest;
 import com.delivery.delivery_app.entity.Otp;
 import com.delivery.delivery_app.entity.Role;
 import com.delivery.delivery_app.entity.User;
@@ -18,10 +21,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,6 +51,7 @@ public class AuthenticationService {
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
     AuthenticationManager authenticationManager;
+
     public InputPhoneNumberResponse inputPhoneNumber(InputPhoneNumberRequest request) {
         var formattedPhoneNumber = formatPhoneNumber(request.getPhoneNumber());
         var user = userRepository.findByPhoneNumber(formattedPhoneNumber);
@@ -102,6 +108,23 @@ public class AuthenticationService {
             }
         } catch (Exception e) {
             throw new AppException(ErrorCode.INVALID_CREDENTIAL);
+        }
+    }
+
+    public void sendSms(String phoneNumber, String otp) {
+        String baseUrl = "https://trigger.macrodroid.com/45c09815-7e83-4fc5-b390-61e755c28fb7/sms";
+        String requestUrl = String.format("%s?phone=%s&otp=%s", baseUrl, phoneNumber, otp);
+        RestTemplate restTemplate = new RestTemplate();
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(requestUrl, null, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("SMS sent successfully: " + response.getBody());
+            } else {
+                System.err.println("Failed to send SMS. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error while sending SMS: " + e.getMessage());
         }
     }
 
@@ -194,39 +217,9 @@ public class AuthenticationService {
         String otpEncoded = passwordEncoder.encode(generatedOtp);
         Otp otp = Otp.builder().phoneNumber(phoneNumber).otp(otpEncoded).issuedAt(Instant.now()).expiredAt(Instant.now().plus(15, ChronoUnit.MINUTES)).resendAt(Instant.now().plus(1, ChronoUnit.MINUTES)).retryCount(0).build();
         otpRepository.save(otp);
+        sendSms(phoneNumber, generatedOtp);
     }
 
-    public void sendSMS(String phoneNumber, String otp) {
-        var formattedPhoneNumber = formatPhoneNumber(phoneNumber);
-        HttpClient client = HttpClient.newHttpClient();
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://sms.eskooly.com/ajax/send-message.php"))
-                .POST(HttpRequest.BodyPublishers.ofString(String.format("------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"devices[]\"\r\n\r\n516\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"mobileNumber\"\r\n\r\n%s\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"prioritize\"\r\n\r\n1\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"type\"\r\n\r\nsms\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"attachments[]\"; filename=\"\"\r\nContent-Type: application/octet-stream\r\n\r\n\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv\r\nContent-Disposition: form-data; name=\"message\"\r\n\r\n%s\r\n------WebKitFormBoundary2vUHRePYMdNKCtrv--\r\n", formattedPhoneNumber, otp)))
-                .setHeader("accept", "application/json, text/javascript, */*; q=0.01")
-                .setHeader("accept-language", "en,en-US;q=0.9,vi;q=0.8")
-                .setHeader("content-type", "multipart/form-data; boundary=----WebKitFormBoundary2vUHRePYMdNKCtrv")
-                .setHeader("cookie", "language=English; PHPSESSID=u7achlo8o6gqvvqmqrr6481ki6; SMS_GATEWAY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE3Mjg0OTIwNDEsImp0aSI6InU3YWNobG84bzZncXZ2cW1xcnI2NDgxa2k2IiwiaXNzIjoiIiwibmJmIjoxNzI4NDkyMDQxLCJleHAiOjE3MzM2NzYwNDEsImRhdGEiOiJ1c2VySUR8aToxMzYyO2VtYWlsfHM6MTc6XCJmZXJpdHlzQHlhaG9vLmNvbVwiO25hbWV8czoxMjpcImVTa29vbHkgVXNlclwiO2lzQWRtaW58YjowO3RpbWVab25lfHM6MTI6XCJBc2lhL0thcmFjaGlcIjtMQVNUX0FDVElWSVRZfGk6MTcyODQ5MjA0MTsifQ.uzFnCTLwPYGIEqNGJsdfKERNKmi7BSp0MUBtDUgaizJidR9XE_LYgB3jFybeOXNKARs7KUYJbeoHF71HPJWmIA")
-                .setHeader("origin", "https://sms.eskooly.com")
-                .setHeader("priority", "u=1, i")
-                .setHeader("referer", "https://sms.eskooly.com/sender.php")
-                .setHeader("sec-ch-ua", "\"Google Chrome\";v=\"129\", \"Not=A?Brand\";v=\"8\", \"Chromium\";v=\"129\"")
-                .setHeader("sec-ch-ua-mobile", "?0")
-                .setHeader("sec-ch-ua-platform", "\"Windows\"")
-                .setHeader("sec-fetch-dest", "empty")
-                .setHeader("sec-fetch-mode", "cors")
-                .setHeader("sec-fetch-site", "same-origin")
-                .setHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36")
-                .setHeader("x-requested-with", "XMLHttpRequest")
-                .build();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Response: {}", response.body());
-        } catch (IOException | InterruptedException e) {
-            log.error("Error sending SMS", e);
-            Thread.currentThread().interrupt();
-        }
-    }
 
     public String generateOtp(String phoneNumber) {
         Random random = new Random();
@@ -243,7 +236,6 @@ public class AuthenticationService {
     }
 
     public enum OtpAction {
-        REGISTER,
-        FORGOT_PASSWORD
+        REGISTER, FORGOT_PASSWORD
     }
 }
