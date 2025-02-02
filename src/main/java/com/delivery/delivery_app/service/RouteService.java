@@ -2,10 +2,7 @@ package com.delivery.delivery_app.service;
 
 import com.delivery.delivery_app.constant.OrderType;
 import com.delivery.delivery_app.constant.ProductSize;
-import com.delivery.delivery_app.dto.route.Node;
-import com.delivery.delivery_app.dto.route.Route;
-import com.delivery.delivery_app.dto.route.RouteFinderRequest;
-import com.delivery.delivery_app.dto.route.RouteResponse;
+import com.delivery.delivery_app.dto.route.*;
 import com.delivery.delivery_app.mapper.NodeMapper;
 import com.delivery.delivery_app.utils.Edge;
 import lombok.AccessLevel;
@@ -81,6 +78,13 @@ public class RouteService {
 //        return new RouteFinderResponse(result);
 //    }
 
+    public RouteResponse test(RouteFinderTest request) {
+        com.delivery.delivery_app.utils.Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
+        com.delivery.delivery_app.utils.Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
+        if (start == null || goal == null) return new RouteResponse(Collections.emptyList(), 0.0, "", 0);
+        var route = aStar(start.getId(), goal.getId());
+        return new RouteResponse(route.getNodes(), route.getDistance(), "", 0);
+    }
     public RouteResponse findRoute(RouteFinderRequest request) {
         com.delivery.delivery_app.utils.Node start = getNearestNode(request.getOrigin().getLatitude(), request.getOrigin().getLongitude());
         com.delivery.delivery_app.utils.Node goal = getNearestNode(request.getDestination().getLatitude(), request.getDestination().getLongitude());
@@ -114,7 +118,7 @@ public class RouteService {
         return new RouteResponse(result, totalDistance, estimateTime(totalDistance), estimateCost(request.getOrderType(), request.getProductSize(), totalDistance));
     }
 
-    private Route aStar(int startId, int goalId) {
+    public Route aStar(int startId, int goalId) {
         com.delivery.delivery_app.utils.Node start = nodes.get(startId);
         com.delivery.delivery_app.utils.Node goal = nodes.get(goalId);
         if (start == null || goal == null) return new Route(Collections.emptyList(), 0.0);
@@ -152,6 +156,7 @@ public class RouteService {
                     cameFrom.put(neighbor, current);
                     gScore.put(neighbor, tentativeGScore);
                     fScore.put(neighbor, tentativeGScore + heuristic(neighbor, goal));
+//                    fScore.put(neighbor, tentativeGScore);
                     neighbor.setfScore(fScore.get(neighbor));
 
                     if (!openSet.contains(neighbor)) {
@@ -274,6 +279,9 @@ public class RouteService {
         int basePrice;
         int perKmPrice;
 
+        if (productSize == null) {
+            productSize = ProductSize.SMALL;
+        }
         switch (productSize) {
             case ProductSize.SMALL:
                 basePrice = 10000;

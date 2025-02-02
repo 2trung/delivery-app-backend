@@ -2,6 +2,7 @@ package com.delivery.delivery_app.controller;
 
 import com.delivery.delivery_app.dto.ApiResponse;
 import com.delivery.delivery_app.dto.route.RouteFinderRequest;
+import com.delivery.delivery_app.dto.route.RouteFinderTest;
 import com.delivery.delivery_app.dto.route.RouteResponse;
 import com.delivery.delivery_app.service.RouteService;
 import jakarta.validation.Valid;
@@ -23,5 +24,11 @@ public class RouteController {
     ApiResponse<RouteResponse> getPath(@RequestBody @Valid RouteFinderRequest request) {
         var result = routeService.findRoute(request);
         return ApiResponse.<RouteResponse>builder().data(result).build();
+    }
+
+    @PostMapping("/test")
+    ApiResponse<String> getPath(@RequestBody @Valid RouteFinderTest request) {
+        var result = routeService.test(request);
+        return ApiResponse.<String>builder().data("ok").build();
     }
 }
